@@ -34,11 +34,16 @@ class User(object):
 	def receiveKey(self, key):
 		self.registration_key = key
 
-	#transmits data to the organization. 
+	#transmits an encrypted request to the organization. 
 	#typically, this would either be the AES key and block number to permit the org to obtain the user's info,
 	#or it would be the merkel root used for authentication
-	def sendToOrg(self,message, org):
-		org.receiveMessage(message)
+	def sendEncryptedRequestToOrg(self, request, org):
+		org.receiveEncryptedRequest(self,request)
+
+	#transmits an unencrypted request to the organization.
+	#Typically, the only unencrypted request that the organization would receive is a request for a key for registration
+	def sendRequest(self,request,org):
+		org.receiveRequest(self,request)
 
 	#re-encrypts the data on the block with a new AES key
 	def reencrypt(self):
@@ -135,21 +140,8 @@ class User(object):
 
 	#function which allows a user to register with a organization, provided that he has already registered with KYC service
 	def register_org(self,org):
-		#organization first generates a public-private key pair, and sends the public key to the user
-		org.generateKey()
-		#write key to the file then read the same file to obtain the key in plaintext
-		f = open("publicKey.pem", "a+b")
-		f.write(org.RSA_pub_key.exportKey('PEM'))
-		f.seek(0)
-		RSA_pub_key_str = f.read()
-		print("%s generating RSA public key: %s"%(org.name,RSA_pub_key_str))
-		f.close()
-
-		#delete file after this to prevent key from being stored as a file
-		os.remove("publicKey.pem")
-		print("%s sending RSA public key to %s"%(org.name,user.name))
-		org.sendPublicKey(user)
-
+		#request for a public key from the organization to use for encryption
+		self.sendRequest({"request":"key"},org)
 		#user inputs the username and password that he wants
 		username = input("Registration: please enter username: ")
 		password = getpass.getpass("Please enter password: ")
@@ -162,25 +154,11 @@ class User(object):
 		token = users[input("Please scan your token: ")].token
 		message = "{'request': 'register', 'block_id': '%s', 'username': '%s', 'password_hash': '%s', 'aes_key': %s}" %(token.block_id,username, password_hash, token.AES_key)
 		print("Encrypting request by user to register for organization: %s"%message)
-		self.sendToOrg(crypto_functions.rsa_encrypt(message,self.registration_key),org)
-		print("Sending encrypted request:%s"%org.recievedMessage)
-		#org decrypts the message with their private key and handles the message
-		#in this case, the user's request is for registration, and that will be done under the handleRequest method of the org
+		encrypted_request = crypto_functions.rsa_encrypt(message,self.registration_key)
+		print("Sending encrypted request:%s"%encrypted_request)
 
-		#store private key, AES key, and user's block id in the token
-		#first get private key as plaintext
-		f = open("privateKey.pem", "a+b")
-		f.write(org.RSA_pvt_key.exportKey('PEM'))
-		f.seek(0)
-		RSA_pvt_key_str = f.read()
-		print("Using RSA private key to decrypt request: %s"%RSA_pvt_key_str)
-		f.close()
-		#delete file after this to prevent key from being stored as a file
-		os.remove("privateKey.pem")
-		decrypted = crypto_functions.rsa_decrypt(org.recievedMessage,org.RSA_pvt_key)
-		user_request = ast.literal_eval(decrypted) #convert message to dict
-		org.handleRequest(user_request)
-	
+		#Send the request to the organization, which will decrypt it with their private key and handle the registration request
+		self.sendEncryptedRequestToOrg(encrypted_request,org)
 					
 		
 #A class representing a block in the blockchain. Stores the user's encrypted information
@@ -232,8 +210,27 @@ class Organization(object):
 	def sendPublicKey(self,user):
 		user.receiveKey(self.RSA_pub_key)
 
-	def receiveMessage(self,message):
-		self.recievedMessage = message
+	def receiveEncryptedRequest(self,user,encrypted_request):
+		#first get private key as plaintext to show for demo purposes
+		f = open("privateKey.pem", "a+b")
+		f.write(self.RSA_pvt_key.exportKey('PEM'))
+		f.seek(0)
+		RSA_pvt_key_str = f.read()
+		print("Using RSA private key to decrypt request: %s"%RSA_pvt_key_str)
+		f.close()
+		#delete file after this to prevent key from being stored as a file
+		os.remove("privateKey.pem")
+
+		#use org's own private key to decrypt the user's request
+		decrypted = crypto_functions.rsa_decrypt(encrypted_request,self.RSA_pvt_key)
+		user_request = ast.literal_eval(decrypted) #convert message to dict
+
+		#handle the registration request
+		org.handleRequest(user_request)
+
+	def receiveRequest(self,user,request):
+		self.messageSender = user
+		self.handleRequest(request)
 
 	#inform user that registration is successful
 	#upon successful registration, user scans token to re-encrypt their data on the block
@@ -241,8 +238,26 @@ class Organization(object):
 		user.reencrypt()
 
 	#handle any incoming requests from users
-	#two possible requests: register and login
+	#three possible requests:key, register, and login
 	def handleRequest(self, request):
+		#request for key
+		if request['request'] == 'key':
+			user = self.messageSender
+			#organization first generates a public-private key pair, and sends the public key to the user
+			self.generateKey()
+			#write key to the file then read the same file to obtain the key in plaintext
+			f = open("publicKey.pem", "a+b")
+			f.write(self.RSA_pub_key.exportKey('PEM'))
+			f.seek(0)
+			RSA_pub_key_str = f.read()
+			print("%s generating RSA public key: %s"%(self.name,RSA_pub_key_str))
+			f.close()
+
+			#delete file after this to prevent key from being stored as a file
+			os.remove("publicKey.pem")
+			print("%s sending RSA public key to %s"%(self.name,user.name))
+			self.sendPublicKey(user)
+
 		#register
 		if request['request'] == 'register':
 			aes_key = request["aes_key"]
@@ -296,7 +311,7 @@ class Organization(object):
 
 			except ValueError:
 				print("Login failed, could not verify identity")
-				self.handleRequest(request)
+				return
 
 
 
@@ -323,6 +338,8 @@ def login_org(org):
 	request = {'request': 'login', 'username': username, 'password_hash': password_hash, 'signature': signature}
 	org.handleRequest(request)
 
+user = User(name = "Ang Beng Haun", postal_code = "518607", id_number = "S9503226E", dob = "26/01/1995")
+user.register_kyc()
 
 while (True):
 	print("What would you like to do?")
