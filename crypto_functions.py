@@ -1,6 +1,8 @@
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto import Random
+import ast
+import requests
 import base64
 
 #function which encrypts data using AES
@@ -8,14 +10,18 @@ def aes_encrypt(data,key):
 	#process data to become suitable for encryption by converting to bytes if needed
 	if type(data) != bytes:
 		data = bytes(data, encoding = "utf8")
-		
 	iv = Random.new().read(AES.block_size)
 	cipher = AES.new(key, AES.MODE_CFB,iv)
-
-	return iv+cipher.encrypt(data)
+	return str(list((iv+cipher.encrypt(data))))
 
 #function which decrypts data using AES
 def aes_decrypt(data,key):
+	if type(data) != bytes:
+		try:
+			data = bytes(ast.literal_eval(data))
+		except:
+			print("Error: could not interpret data for decryption")
+			return
 	iv = data[:16]
 	cipher = AES.new(key, AES.MODE_CFB, iv)
 	decrypted = cipher.decrypt(data[16:]).decode()
@@ -70,7 +76,3 @@ def merkle(data):
 
 	return merkle(temp)
 
-
-
-
-	
