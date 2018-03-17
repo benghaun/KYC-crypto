@@ -141,33 +141,4 @@ public class BlocktraceCrypto {
         return DatatypeConverter.parseBase64Binary(parts[parts.length / 2]);
     }
 
-    public static void main(String[] args) {
-        SecureRandom sr = new SecureRandom();
-        byte[] keyBytes = new byte[16];
-        sr.nextBytes(keyBytes);
-//        System.out.println("Printing key");
-//        System.out.print("[");
-//        for (int i = 0; i < keyBytes.length; i++){
-//            System.out.print(keyBytes[i] + ", ");
-//        }
-//        System.out.println("]");
-        String pubKey = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsuvd81pnoS599N4uOCLK1wQ+5ela2WLJ1ZFCYkv6fzZUoyVwGgBM/7N37/gfqOBV3OjHCKMgShhVL+pfh87hRKttPqrqbJAcd4Gbpyd0SnPfOiWyEpYxEgtZ6vdJLGU2NTAGT+1u64ZXe6NGsaL+bJj7rMalI4/3H9AFn2Yzq4di5PTV5gFYisjXGQ9SzR+dqptELVAkcUYPulY6P4GnjkQnahoVwYoE6CSSZmAm5vUaxbJYBiyWT3JMnSP6dTeHTdEkDE/kGuyp2XzHLb/jT2m+pT2V13YKGfzz2kZrTO3Z2WTGWEfBbPCM5zaRnOQdc63CCHit/qC7YzHjk0wD3wIDAQAB-----END PUBLIC KEY-----";
-
-        String pvtKey = "-----BEGIN PRIVATE KEY-----MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCy693zWmehLn303i44IsrXBD7l6VrZYsnVkUJiS/p/NlSjJXAaAEz/s3fv+B+o4FXc6McIoyBKGFUv6l+HzuFEq20+qupskBx3gZunJ3RKc986JbISljESC1nq90ksZTY1MAZP7W7rhld7o0axov5smPusxqUjj/cf0AWfZjOrh2Lk9NXmAViKyNcZD1LNH52qm0QtUCRxRg+6Vjo/gaeORCdqGhXBigToJJJmYCbm9RrFslgGLJZPckydI/p1N4dN0SQMT+Qa7KnZfMctv+NPab6lPZXXdgoZ/PPaRmtM7dnZZMZYR8Fs8IznNpGc5B1zrcIIeK3+oLtjMeOTTAPfAgMBAAECggEABRnlc5U9xCIrtCoLfk07pEK6OlrbXLxMzdp83omVBEB7zET6e7tLdrTatAxKdsmimRBH8G6aMpKcBygy/g+/a3JJxJIh6eN39E5NLkhZL/A6ypEdkRsYHhAVybWwL+RY1c5fN7MoyO1FHEDM+K6Re24nKsdlGOz3WkBXkLJcwcSnroqsuNZE9JC3Wrgvh/FBAsKhLmwCWwfzZ5oWZEVDAfkDEMne0Kqk8vEXr5iRWV+o+XpS2VuNquSORZjYz4JyGaBggNrXTrL0xRJ4iqIX0/Vxz+29e24zTq4jsWeGNGOxHuYE06Wyg3VRFJP2VUrYByeCZ89j3juTxEEgBDLktQKBgQDOlw/CpWv0kX7tBusd10poHcZJ10DTuFMsb5vJ+IxAY4jJeYZbVegly5FyLyJ5bH7GxWOlZDeg3s88KFGmCTQcPPgHxwlPRD97V4Ryj7y57SFmcBhnGqq/tgI60nDLBb3LmCGqcplOac35GPa9P0mEC5Y85Ev6y98kEhVkF+kylQKBgQDdtrnQHdpnFEF/1Gno5zPR3+iCcmT52orWv5jw4QDfojNP/gM9Hwzb8tmZX7Eu5AaeYLhsZBxp54eSUbswImef8O2k1gvZ4qDsd0AbeHQhXKC/DLh6jFYvNfOvKPXx8mTNcAgHDJaoA10ko0qYzPenCgfTDiTvQnN/FuXLaKDTowKBgCv8mgx1sFC4ke/h4znNVzhn7opWXKU3v+3cLa2JUEN9beiICYV0+yLg/yzywEJeSXgFGzxh5D5KcpF6fDgACaphiOYPCPppq6KVdcv2stZbmRr4jxmU4fpDxKHFoOJ5bHnnAHQMRnwdpw98szyENyD4XprEeTEDK5XAi/Ft7ecpAoGASQhr5NYwn0vY15bM3F9sfnHXUUEFahhHK74pTw+PDhuL84mk33le7wTsEM2ou915IKqTlYDUqz4NNnGdy5lJsTHX1jh75uX0RHBzuZjQCD1O5h/2lMetjBelkclYWr6R3epNeqT265lQEUWIyRSbb3aqZSd/myC0kuSkBYENmSkCgYB2pjxzxPAEfTU3Fi0q58vbrd4IFfcw0d55WBzwdAwYLHVmHDO+4eUtqz+FnQO+TmzQQcJl434KVaGoA5bedUiMC2dS0LAFv0XvMxZ/frGI5RK6yNRa3RyeqQlQnqr48/3nNyjQkQ9iOiPKP8KX88RHu4SPPL0QAz8MSJvGk0U6kA==-----END PRIVATE KEY-----";
-        byte[][] cipherText = rsaEncrypt("Hello World", pemToBytes(pubKey));
-        System.out.println("Printing ciphertext");
-        System.out.print("[");
-        for (int i = 0; i < cipherText.length; i++) {
-            System.out.print("[");
-            for (int j = 0; j < cipherText[i].length; j++) {
-                System.out.print(cipherText[i][j] + ", ");
-            }
-            System.out.print("]");
-        }
-        System.out.println("]");
-        System.out.println(rsaDecrypt(cipherText, pemToBytes(pvtKey)));
-
-
-
-    }
 }
