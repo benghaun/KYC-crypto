@@ -34,7 +34,7 @@ public class JavaCryptoTest {
     }
 
     /**
-     * Tests the AES encryption function by encrypting 100 random inputs, then decrypting them
+     * Tests the AES encryption function by encrypting 1000 random inputs, then decrypting them
      * The test succeeds if the output of the process is the same as the input
      * The key used for encryption is also randomly generated
      */
