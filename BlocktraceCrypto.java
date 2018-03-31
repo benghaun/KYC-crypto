@@ -145,4 +145,22 @@ public class BlocktraceCrypto {
 
     }
 
+    /**
+     * Generates a digital signature from the given data and private key
+     */
+    public static byte[] sign(String inp, byte[] privateKey){
+        byte[] inpBytes = inp.getBytes(StandardCharsets.UTF_8);
+        try {
+            PrivateKey key = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+            Signature signer = Signature.getInstance("SHA256withRSA");
+            signer.initSign(key);
+            signer.update(inpBytes);
+            return signer.sign();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }
