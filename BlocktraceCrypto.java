@@ -49,12 +49,6 @@ public class BlocktraceCrypto {
             SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
             aesCipher.init(Cipher.DECRYPT_MODE,secretKeySpec,ivParams);
             byte[] decrypted = aesCipher.doFinal(actualData);
-            System.out.println("Printing decrypted data");
-            System.out.print("[");
-            for (int i = 0; i < decrypted.length; i++){
-                System.out.print(decrypted[i] + ", ");
-            }
-            System.out.println("]");
             output = new String(decrypted,"UTF-8");
         }
         catch (Exception e){
@@ -76,12 +70,6 @@ public class BlocktraceCrypto {
             SecureRandom sr = new SecureRandom();
             byte[] aesKey = new byte[16];
             sr.nextBytes(aesKey);
-            System.out.println("printing original AES key");
-            System.out.print("[");
-            for (int i = 0; i < aesKey.length; i++){
-                System.out.print(aesKey[i]+ ", ");
-            }
-            System.out.println("]");
             byte[] encryptedAesKey = rsaCipher.doFinal(aesKey);
             byte[] encryptedData = aesEncrypt(data,aesKey);
             output[0] = encryptedData;
@@ -102,12 +90,6 @@ public class BlocktraceCrypto {
         String output = "";
         try {
             byte[] encryptedAesKey = data[1];
-            System.out.println("Printing encrypted AES key");
-            System.out.print("[");
-            for (int i = 0; i < encryptedAesKey.length; i++){
-                System.out.print(encryptedAesKey[i]+ ", ");
-            }
-            System.out.println("]");
             PrivateKey key = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(privateKey));
             Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
             rsaCipher.init(Cipher.DECRYPT_MODE,key);
@@ -139,6 +121,28 @@ public class BlocktraceCrypto {
     public static byte[] pemToBytes(String key){
         String[] parts = key.split("-----");
         return DatatypeConverter.parseBase64Binary(parts[parts.length / 2]);
+    }
+
+    /**
+     * Hashes a string using the SHA256 hashing algorithm
+     * Returns a hex version of the hashed bytes
+     */
+    public static String hash256(String inp){
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encoded = digest.digest(inp.getBytes(StandardCharsets.UTF_8));
+            StringBuilder output = new StringBuilder();
+            for (int i = 0; i < encoded.length; i++) {
+                String hex = Integer.toHexString(0xff & encoded[i]);
+                if(hex.length() == 1) output.append('0');
+                output.append(hex);
+            }
+            return output.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
 }
